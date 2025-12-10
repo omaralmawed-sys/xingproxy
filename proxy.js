@@ -3,7 +3,18 @@ import fetch from "node-fetch";
 
 const app = express();
 
-app.use(express.json());
+// CORS für Chrome Extension erlauben
+app.use((req, res, next) => {
+    res.header("Access-Control-Allow-Origin", "*");  
+    res.header("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+    res.header("Access-Control-Allow-Headers", "Content-Type, x-api-key");
+    next();
+});
+
+// Preflight beantworten
+app.options("*", (req, res) => {
+    res.sendStatus(200);
+});
 
 const N8N_URL = process.env.N8N_URL;
 const N8N_API_KEY = process.env.N8N_API_KEY;
