@@ -36,7 +36,15 @@ if (!N8N_URL) {
 
 app.post("/xing", async (req, res) => {
     try {
+
+        // 🔍 DEBUG 1: Was kommt von der Chrome Extension beim Proxy an?
+        console.log("BODY RECEIVED ON PROXY:", req.body); 
+
         if (!N8N_URL) return res.status(500).json({ error: "N8N_URL not configured on the proxy" });
+
+        // 🔍 DEBUG 2: Was wird an n8n weitergeleitet?
+        console.log("FORWARDED TO N8N:", JSON.stringify(req.body));
+        
         const response = await fetch(N8N_URL, {
             method: "POST",
             headers: {
