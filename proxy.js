@@ -34,6 +34,10 @@ if (!N8N_URL) {
 app.post("/xing", async (req, res) => {
     try {
 
+        if(!req.body) {
+            return res.status(400).json({ error: "No body provided" });
+        }
+        // 🔍 DEBUG 1: Was kommt beim Proxy an?
         console.log("BODY RECEIVED ON PROXY:", req.body); 
 
         if (!N8N_URL) return res.status(500).json({ error: "N8N_URL not configured on the proxy" });
