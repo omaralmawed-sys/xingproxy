@@ -3,10 +3,14 @@ import fetch from "node-fetch";
 
 const app = express();
 
+// Body parser (für POST-Requests)
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
 // CORS für Chrome Extension erlauben
 app.use((req, res, next) => {
     res.header("Access-Control-Allow-Origin", "chrome-extension://anpbjeghdkiojcgkjanchcmbijfmckml");
-;  
+    
     res.header("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
     res.header("Access-Control-Allow-Headers", "Content-Type, x-api-key");
     res.header("Access-Control-Allow-Credentials", "true");
@@ -23,15 +27,20 @@ app.options("*", (req, res) => {
 const N8N_URL = process.env.N8N_URL;
 const N8N_API_KEY = process.env.N8N_API_KEY;
 
+if (!N8N_URL) {
+    console.warn("Warning: N8N_URL is not set. Requests to /xing will fail until this is configured.");
+}
+
 app.post("/xing", async (req, res) => {
     try {
+        if (!N8N_URL) return res.status(500).json({ error: "N8N_URL not configured on the proxy" });
         const response = await fetch(N8N_URL, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
                 "x-api-key": N8N_API_KEY
             },
-            body: JSON.stringify(req.body)
+            body: JSON.stringify(req.body ?? {})
         });
 
         const text = await response.text();
@@ -40,10 +49,12 @@ app.post("/xing", async (req, res) => {
         try {
             data = JSON.parse(text);
         } catch {
-            return res.status(500).send("Invalid JSON received from n8n.");
+            // Wenn n8n kein JSON zurückgibt, leiten wir den Rohtext weiter (Statuscode wird übernommen)
+            const status = response.status || 200;
+            return res.status(status).send(text);
         }
 
-        res.json(data);
+        res.status(response.status || 200).json(data);
 
     } catch (err) {
         console.error("Proxy error:", err);
