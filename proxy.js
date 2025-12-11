@@ -7,20 +7,17 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// CORS komplett freischalten (Chrome Extension + JSON Body)
+// CORS für Chrome Extension erlauben
 app.use((req, res, next) => {
     res.header("Access-Control-Allow-Origin", "chrome-extension://anpbjeghdkiojcgkjanchcmbijfmckml");
-    res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-    res.header("Access-Control-Allow-Headers", "*");
+    
+    res.header("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+    res.header("Access-Control-Allow-Headers", "Content-Type, x-api-key");
     res.header("Access-Control-Allow-Credentials", "true");
 
-    if (req.method === "OPTIONS") {
-        return res.sendStatus(200);
-    }
-
+    if (req.method === "OPTIONS") return res.sendStatus(200);
     next();
 });
-
 
 // Preflight beantworten
 app.options("*", (req, res) => {
@@ -37,14 +34,12 @@ if (!N8N_URL) {
 app.post("/xing", async (req, res) => {
     try {
 
-        // 🔍 DEBUG 1: Was kommt von der Chrome Extension beim Proxy an?
         console.log("BODY RECEIVED ON PROXY:", req.body); 
 
         if (!N8N_URL) return res.status(500).json({ error: "N8N_URL not configured on the proxy" });
 
         // 🔍 DEBUG 2: Was wird an n8n weitergeleitet?
         console.log("FORWARDED TO N8N:", JSON.stringify(req.body));
-        
         const response = await fetch(N8N_URL, {
             method: "POST",
             headers: {
